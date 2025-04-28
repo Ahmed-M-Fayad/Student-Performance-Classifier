@@ -28,24 +28,24 @@ if uploaded_file is not None:
     st.write("### 🔎 Preview of uploaded data:")
     st.dataframe(data.head(), use_container_width=True)
 
-    required_features = [
-        'correct_percentage',
-        'average_correct_percentage',
-        'answer_type_Knowledge-Based',
-        'answer_type_Problem-Solving',
-        'answer_type_Strategic Reasoning'
-    ]
+    required_features = ['user_id', 'answer_type', 'correct_sum', 'total_questions']
 
     if not all(feature in data.columns for feature in required_features):
         st.error(f"🚨 Uploaded file must contain exactly these columns:\n\n{required_features}")
     else:
-        X = data[required_features]
+        # Preprocessing
+        data['correct_percentage'] = (data['correct_sum'] / data['total_questions']) * 100
 
+        features = ['correct_percentage', 'answer_type']
+        X = data[features]
+
+        # Load model
         with st.spinner('🔄 Predicting performance...'):
-            model = joblib.load('Model Training/Resulted Model/rf_model.joblib')  # Be careful with slashes!
+            model = joblib.load('Model Training/Resulted Model/model_pipe.joblib')
 
             predictions = model.predict(X)
 
+            # Mapping numerical predictions to categories
             mapping = {
                 0: "Advanced",
                 1: "Intermediate",
@@ -53,29 +53,46 @@ if uploaded_file is not None:
             }
             predicted_labels = [mapping[pred] for pred in predictions]
 
-            results = data.copy()
-            results['Predicted Performance'] = predicted_labels
+            data['Predicted Performance'] = predicted_labels
+
+            # Assigning **Predicted Category** for each user_id
+            user_performance = data.groupby('user_id')['Predicted Performance'].agg(lambda x: x.mode()[0]).reset_index()
 
         st.success('🎯 Predictions completed successfully!')
         st.write("### 📈 Prediction Results:")
-        st.dataframe(results.style.highlight_max(axis=0, color='lightgreen'), use_container_width=True)
+
+        # Styling: Highlight only the 'Predicted Performance' column
+# --- Define Styling Function ---
+        def highlight_advanced(val):
+            if val == 'Advanced':
+                return 'background-color: #2E7D32; color: white;'  # Dark green background + white text (good for dark mode)
+            else:
+                return ''
+
+        # --- Apply Styling ---
+        styled_df = user_performance.style.applymap(
+            highlight_advanced,
+            subset=['Predicted Performance']
+        )
+
+        st.dataframe(styled_df, use_container_width=True)
 
         # --- Download Section ---
         @st.cache_data
         def convert_df(df):
             return df.to_csv(index=False).encode('utf-8')
 
-        csv = convert_df(results)
+        csv = convert_df(user_performance)
 
         st.markdown("---")
         st.download_button(
             label="📥 Download Results as CSV",
             data=csv,
-            file_name='predictions.csv',
+            file_name='user_performance_predictions.csv',
             mime='text/csv',
             help="Click to download the file containing predictions.",
         )
 
 # --- Footer ---
 st.markdown("---")
-st.caption("Made by Ahmed Fayad | Data Scientist 👨‍💻")
+st.caption("Made by Ahmed M. Fayad | Data Scientist 👨‍💻")
