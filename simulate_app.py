@@ -21,6 +21,35 @@ st.markdown("---")
 # --- File Uploader ---
 uploaded_file = st.file_uploader("📤 Upload your CSV file here", type=["csv"])
 
+# --- Manual Input ---
+st.sidebar.markdown("### 📝 Or Enter Student Info Manually")
+
+manual_user_id = st.sidebar.text_input("User ID (optional)", "")
+manual_answer_type = st.sidebar.selectbox("Answer Type", [
+    "Knowledge-Based", "Problem-Solving", "Strategic Reasoning"
+])
+manual_correct_sum = st.sidebar.number_input("Correct Answers", min_value=0, step=1)
+manual_total_questions = st.sidebar.number_input("Total Questions", min_value=1, step=1, value=1)
+
+if st.sidebar.button("🔍 Predict for Manual Entry"):
+    correct_percentage = (manual_correct_sum / manual_total_questions) * 100
+    manual_input_df = pd.DataFrame({
+        "correct_percentage": [correct_percentage],
+        "answer_type": [manual_answer_type]
+    })
+
+    # Load model and predict
+    model = joblib.load('Model Training/Resulted Model/model_pipe.joblib')
+    pred = model.predict(manual_input_df)[0]
+
+    mapping = {
+        0: "Advanced",
+        1: "Intermediate",
+        2: "Needs Reinforcement"
+    }
+
+    st.success(f"✅ Predicted Performance: **{mapping[pred]}**")
+
 # --- Process File ---
 if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
@@ -62,7 +91,7 @@ if uploaded_file is not None:
         st.write("### 📈 Prediction Results:")
 
         # Styling: Highlight only the 'Predicted Performance' column
-# --- Define Styling Function ---
+        # --- Define Styling Function ---
         def highlight_advanced(val):
             if val == 'Advanced':
                 return 'background-color: #2E7D32; color: white;'  # Dark green background + white text (good for dark mode)
