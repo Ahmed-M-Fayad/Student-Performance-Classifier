@@ -22,7 +22,7 @@ st.markdown("---")
 uploaded_file = st.file_uploader("📤 Upload your CSV file here", type=["csv"])
 
 # --- Manual Input ---
-st.sidebar.markdown("### 📝 Or Enter Student Info Manually")
+st.sidebar.markdown("### 📝 Manual Entry for Quick Prediction")
 
 manual_user_id = st.sidebar.text_input("User ID (optional)", "")
 manual_answer_type = st.sidebar.selectbox("Answer Type", [
@@ -31,6 +31,7 @@ manual_answer_type = st.sidebar.selectbox("Answer Type", [
 manual_correct_sum = st.sidebar.number_input("Correct Answers", min_value=0, step=1)
 manual_total_questions = st.sidebar.number_input("Total Questions", min_value=1, step=1, value=1)
 
+manual_prediction_result = None
 if st.sidebar.button("🔍 Predict for Manual Entry"):
     correct_percentage = (manual_correct_sum / manual_total_questions) * 100
     manual_input_df = pd.DataFrame({
@@ -47,8 +48,27 @@ if st.sidebar.button("🔍 Predict for Manual Entry"):
         1: "Intermediate",
         2: "Needs Reinforcement"
     }
+    manual_prediction_result = mapping[pred]
 
-    st.success(f"✅ Predicted Performance: **{mapping[pred]}**")
+# --- Manual Prediction Output Display ---
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("### 🎯 Manual Prediction Result")
+    if manual_prediction_result:
+        color = {
+            "Advanced": "#2E7D32",
+            "Intermediate": "#1976D2",
+            "Needs Reinforcement": "#D32F2F"
+        }[manual_prediction_result]
+        
+        st.markdown(
+            f"<div style='background-color:{color};padding:10px;border-radius:10px;color:white;text-align:center;'>"
+            f"<strong>{manual_prediction_result}</strong>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+    else:
+        st.caption("Prediction will appear here after submitting the form.")
 
 # --- Process File ---
 if uploaded_file is not None:
