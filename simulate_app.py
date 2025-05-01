@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 
 # --- Page Config ---
-st.set_page_config(page_title="Student Performance Predictor", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="NewEd", page_icon="🎯", layout="centered")
 
 # --- Sidebar ---
 with st.sidebar:
@@ -14,7 +14,7 @@ with st.sidebar:
     st.caption("Created with ❤️ using Streamlit.")
 
 # --- Main Header ---
-st.title("🚀 Student Performance Prediction App")
+st.title("🚀 Student NewEd App")
 st.subheader("Easily predict student categories: Advanced, Intermediate, or Needs Reinforcement")
 st.markdown("---")
 
